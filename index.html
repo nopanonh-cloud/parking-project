@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ระบบจองที่จอดรถอัจฉริยะ (Secure V3)</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600&display=swap');
+        body { font-family: 'Kanit', sans-serif; }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen flex flex-col items-center justify-center p-6">
+
+    <div class="bg-white p-8 rounded-2xl shadow-xl max-w-2xl w-full text-center">
+        <h1 class="text-3xl font-bold text-gray-800 mb-2">🚗 ระบบจองที่จอดรถอัจฉริยะ</h1>
+        <p class="text-gray-500 mb-6">โครงงานคอมพิวเตอร์ ม.6 | ระบบป้องกันการลบด้วยรหัสผ่านส่วนตัว</p>
+
+        <div class="flex justify-center gap-6 mb-8 text-sm">
+            <div class="flex items-center gap-2">
+                <div class="w-5 h-5 bg-emerald-500 rounded-md"></div>
+                <span>ว่าง (Available)</span>
+            </div>
+            <div class="flex items-center gap-2">
+                <div class="w-5 h-5 bg-rose-500 rounded-md"></div>
+                <span>ถูกจองแล้ว (Reserved)</span>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-3 gap-4 mb-6">
+            <button id="btn-A1" onclick="selectSlot('A1')" class="border-2 border-dashed border-gray-300 p-6 rounded-xl bg-emerald-500 text-white font-bold text-xl transition-all hover:scale-105 cursor-pointer shadow-md">A1</button>
+            <button id="btn-A2" onclick="selectSlot('A2')" class="border-2 border-dashed border-gray-300 p-6 rounded-xl bg-emerald-500 text-white font-bold text-xl transition-all hover:scale-105 cursor-pointer shadow-md">A2</button>
+            <button id="btn-A3" onclick="selectSlot('A3')" class="border-2 border-dashed border-gray-300 p-6 rounded-xl bg-emerald-500 text-white font-bold text-xl transition-all hover:scale-105 cursor-pointer shadow-md">A3</button>
+            <button id="btn-B1" onclick="selectSlot('B1')" class="border-2 border-dashed border-gray-300 p-6 rounded-xl bg-emerald-500 text-white font-bold text-xl transition-all hover:scale-105 cursor-pointer shadow-md">B1</button>
+            <button id="btn-B2" onclick="selectSlot('B2')" class="border-2 border-dashed border-gray-300 p-6 rounded-xl bg-emerald-500 text-white font-bold text-xl transition-all hover:scale-105 cursor-pointer shadow-md">B2</button>
+            <button id="btn-B3" onclick="selectSlot('B3')" class="border-2 border-dashed border-gray-300 p-6 rounded-xl bg-emerald-500 text-white font-bold text-xl transition-all hover:scale-105 cursor-pointer shadow-md">B3</button>
+        </div>
+
+        <div class="bg-gray-50 p-5 rounded-xl mb-6 text-left">
+            <p class="text-gray-700 mb-3 text-center font-semibold">ช่องที่คุณกำลังเลือก: <span id="selected-slot" class="font-bold text-indigo-600 text-lg">ยังไม่ได้เลือก</span></p>
+            
+            <div id="booking-details" class="hidden text-sm border-t border-gray-200 pt-3 mt-2">
+                <p class="text-gray-600">👤 <span class="font-semibold">ชื่อผู้จอง:</span> <span id="info-name" class="text-gray-900">-</span></p>
+                <p class="text-gray-600 mt-1">🆔 <span class="font-semibold">ทะเบียนรถ:</span> <span id="info-plate" class="text-gray-900">-</span></p>
+                <p class="text-amber-600 mt-1 flex items-center gap-1 font-medium">🔒 มีระบบล็อกรหัสผ่านป้องกันคนอื่นยกเลิก</p>
+            </div>
+        </div>
+
+        <div id="input-form" class="bg-indigo-50 p-5 rounded-xl mb-6 text-left hidden">
+            <h3 class="text-indigo-900 font-semibold mb-3 text-sm flex items-center gap-1">📝 กรอกข้อมูลเพื่อยืนยันการจอง</h3>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                <div>
+                    <label class="block text-xs text-indigo-700 mb-1 font-medium">ชื่อ-นามสกุล</label>
+                    <input type="text" id="user-name" placeholder="เช่น นายสมชาย" class="w-full text-sm bg-white border border-indigo-200 rounded-lg p-2.5 outline-indigo-500">
+                </div>
+                <div>
+                    <label class="block text-xs text-indigo-700 mb-1 font-medium">ทะเบียนรถ</label>
+                    <input type="text" id="car-plate" placeholder="เช่น กข 1234" class="w-full text-sm bg-white border border-indigo-200 rounded-lg p-2.5 outline-indigo-500">
+                </div>
+                <div>
+                    <label class="block text-xs text-indigo-700 mb-1 font-medium">ตั้งรหัสยกเลิก (เลข 4 ตัว)</label>
+                    <input type="password" id="user-pin" maxlength="4" pattern="\d*" inputmode="numeric" placeholder="เช่น 1234" class="w-full text-sm bg-white border border-indigo-200 rounded-lg p-2.5 outline-indigo-500">
+                </div>
+            </div>
+        </div>
+
+        <div class="flex gap-3">
+            <button id="btn-confirm" onclick="confirmBooking()" class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 px-6 rounded-xl transition-all cursor-not-allowed shadow-lg opacity-50 text-sm" disabled>
+                ยืนยันการจองที่จอดรถ
+            </button>
+            <button id="btn-cancel" onclick="cancelBooking()" class="hidden flex-1 bg-rose-600 hover:bg-rose-700 text-white font-semibold py-3 px-6 rounded-xl transition-all shadow-lg text-sm cursor-pointer">
+                ยกเลิกการจอง (ต้องใช้รหัสผ่าน)
+            </button>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getDatabase, ref, set, onValue, remove } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDUk83XoFbE5E90R5mA4hxCGYQ6z7wZgZ8",
+            authDomain: "my-parking-project-b0efb.firebaseapp.com",
+            databaseURL: "https://my-parking-project-b0efb-default-rtdb.firebaseio.com",
+            projectId: "my-parking-project-b0efb",
+            storageBucket: "my-parking-project-b0efb.firebasestorage.app",
+            messagingSenderId: "122760311804",
+            appId: "1:122760311804:web:b6e5e34b550a0dd4e6b879"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const database = getDatabase(app);
+
+        let chosenSlot = "";
+        let currentDatabaseSnapshot = null;
+
+        // ฟังก์ชันเมื่อคลิกเลือกช่องจอด
+        window.selectSlot = function(slotName) {
+            chosenSlot = slotName;
+            document.getElementById('selected-slot').innerText = slotName;
+
+            document.querySelectorAll('.grid button').forEach(b => b.classList.remove('ring-4', 'ring-indigo-400'));
+            const btn = document.getElementById("btn-" + slotName);
+            btn.classList.add('ring-4', 'ring-indigo-400');
+
+            const isReserved = btn.classList.contains('bg-rose-500');
+
+            if (isReserved) {
+                document.getElementById('input-form').classList.add('hidden');
+                document.getElementById('booking-details').classList.remove('hidden');
+                document.getElementById('btn-confirm').classList.add('hidden');
+                document.getElementById('btn-cancel').classList.remove('hidden');
+
+                if (currentDatabaseSnapshot && currentDatabaseSnapshot[slotName]) {
+                    const info = currentDatabaseSnapshot[slotName];
+                    document.getElementById('info-name').innerText = info.name || "-";
+                    document.getElementById('info-plate').innerText = info.plate || "-";
+                }
+            } else {
+                document.getElementById('input-form').classList.remove('hidden');
+                document.getElementById('booking-details').classList.add('hidden');
+                document.getElementById('btn-confirm').classList.remove('hidden', 'opacity-50', 'cursor-not-allowed');
+                document.getElementById('btn-confirm').removeAttribute('disabled');
+                document.getElementById('btn-cancel').classList.add('hidden');
+                
+                document.getElementById('user-name').value = "";
+                document.getElementById('car-plate').value = "";
+                document.getElementById('user-pin').value = "";
+            }
+        }
+
+        // ฟังก์ชันกดยืนยันบันทึกการจอง
+        window.confirmBooking = function() {
+            if (!chosenSlot) return;
+
+            const nameInput = document.getElementById('user-name').value.trim();
+            const plateInput = document.getElementById('car-plate').value.trim();
+            const pinInput = document.getElementById('user-pin').value.trim();
+
+            if (!nameInput || !plateInput || !pinInput) {
+                alert("กรุณากรอกข้อมูลให้ครบถ้วน รวมถึงรหัสเลข 4 หลักด้วยครับ");
+                return;
+            }
+
+            if (pinInput.length < 4) {
+                alert("กรุณาตั้งรหัสผ่านเป็นตัวเลขให้ครบ 4 หลักครับ");
+                return;
+            }
+
+            const bookingData = {
+                status: "reserved",
+                name: nameInput,
+                plate: plateInput,
+                pin: pinInput, // เซฟรหัสลงคลาวด์เพื่อใช้ตรวจสอบตอนสั่งลบ
+                timestamp: new Date().toLocaleString('th-TH')
+            };
+            
+            set(ref(database, 'slots/' + chosenSlot), bookingData)
+            .then(() => {
+                alert("🎉 จองช่อง " + chosenSlot + " สำเร็จ! ข้อมูลลงระบบเรียบร้อย");
+                resetUI();
+            })
+            .catch((error) => {
+                alert("เกิดข้อผิดพลาด: " + error.message);
+            });
+        }
+
+        // ฟังก์ชันตรวจสอบรหัสผ่านก่อนลบข้อมูลจาก Firebase
+        window.cancelBooking = function() {
+            if (!chosenSlot) return;
+
+            // 1. ดึงค่ารหัสจริงที่เซฟไว้ในใจของ Firebase ออกมาตรวจสอบ
+            if (currentDatabaseSnapshot && currentDatabaseSnapshot[chosenSlot]) {
+                const correctPin = currentDatabaseSnapshot[chosenSlot].pin;
+
+                // 2. เด้งกล่องข้อความให้พิมพ์รหัสผ่านเพื่อยืนยันตัวตน
+                const typedPin = prompt("🔑 ช่องนี้ถูกล็อกไว้ กรุณากรอกรหัสผ่าน 4 หลัก เพื่อยกเลิกการจอง:");
+
+                if (typedPin === null) return; // กด Cancel ในป๊อปอัป ไม่ทำอะไรต่อ
+
+                // 3. ตรวจสอบรหัสผ่านว่าตรงไหม
+                if (typedPin.trim() === correctPin.toString()) {
+                    remove(ref(database, 'slots/' + chosenSlot))
+                    .then(() => {
+                        alert("🗑️ ยกเลิกการจองช่อง " + chosenSlot + " สำเร็จ!");
+                        resetUI();
+                    })
+                    .catch((error) => {
+                        alert("เกิดข้อผิดพลาด: " + error.message);
+                    });
+                } else {
+                    alert("❌ รหัสผ่านไม่ถูกต้อง! คุณไม่มีสิทธิ์ยกเลิกการจองช่องนี้");
+                }
+            }
+        }
+
+        function resetUI() {
+            const currentBtn = document.getElementById("btn-" + chosenSlot);
+            if(currentBtn) currentBtn.classList.remove('ring-4', 'ring-indigo-400');
+            chosenSlot = "";
+            document.getElementById('selected-slot').innerText = "ยังไม่ได้เลือก";
+            document.getElementById('input-form').classList.add('hidden');
+            document.getElementById('booking-details').classList.add('hidden');
+            
+            document.getElementById('btn-confirm').classList.remove('hidden');
+            document.getElementById('btn-confirm').classList.add('opacity-50', 'cursor-not-allowed');
+            document.getElementById('btn-confirm').setAttribute('disabled', 'true');
+            document.getElementById('btn-cancel').classList.add('hidden');
+        }
+
+        const slotsRef = ref(database, 'slots');
+        onValue(slotsRef, (snapshot) => {
+            const data = snapshot.val();
+            currentDatabaseSnapshot = data;
+
+            const allSlots = ['A1', 'A2', 'A3', 'B1', 'B2', 'B3'];
+            allSlots.forEach(slot => {
+                const btn = document.getElementById("btn-" + slot);
+                if (btn) {
+                    btn.classList.remove('bg-rose-500');
+                    btn.classList.add('bg-emerald-500');
+                }
+            });
+
+            if (data) {
+                Object.keys(data).forEach((slotName) => {
+                    const btn = document.getElementById("btn-" + slotName);
+                    if (btn && data[slotName].status === "reserved") {
+                        btn.classList.remove('bg-emerald-500');
+                        btn.classList.add('bg-rose-500');
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+</html>
